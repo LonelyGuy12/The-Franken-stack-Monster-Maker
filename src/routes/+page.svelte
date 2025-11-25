@@ -25,6 +25,17 @@
 </script>
 
 <main>
+	<!-- Flying Witch -->
+	<img src="/witch.png" alt="Flying Witch" class="flying-witch" />
+
+	<!-- Spooky Decorations -->
+	<div class="decoration pumpkin pumpkin-left">🎃</div>
+	<div class="decoration pumpkin pumpkin-right">🎃</div>
+	<div class="decoration lamp lamp-left">🕯️</div>
+	<div class="decoration lamp lamp-right">🕯️</div>
+	<div class="lightning lightning-1">⚡</div>
+	<div class="lightning lightning-2">⚡</div>
+
 	<div class="container">
 		<h1 class="title">🧟‍♂️ Franken-Monster Lab 🧟‍♂️</h1>
 
@@ -455,5 +466,152 @@
 
 	.metadata p {
 		margin: 0.25rem 0;
+	}
+
+	/* Flying Witch Animation */
+	.flying-witch {
+		position: fixed;
+		width: 150px;
+		height: 150px;
+		z-index: 1000;
+		filter: drop-shadow(0 0 15px #9d4edd);
+		animation: flyAcross 15s linear infinite;
+		pointer-events: none;
+		transform: scaleX(-1);
+	}
+
+	@keyframes flyAcross {
+		0% {
+			left: -200px;
+			top: 10%;
+			transform: scaleX(-1) rotate(-5deg);
+		}
+		25% {
+			top: 20%;
+			transform: scaleX(-1) rotate(5deg);
+		}
+		50% {
+			top: 15%;
+			transform: scaleX(-1) rotate(-3deg);
+		}
+		75% {
+			top: 25%;
+			transform: scaleX(-1) rotate(3deg);
+		}
+		100% {
+			left: calc(100% + 200px);
+			top: 10%;
+			transform: scaleX(-1) rotate(-5deg);
+		}
+	}
+
+	/* Spooky Decorations */
+	.decoration {
+		position: fixed;
+		font-size: 3rem;
+		z-index: 999;
+		pointer-events: none;
+	}
+
+	.pumpkin-left {
+		left: 2%;
+		top: 15%;
+		animation: bob 3s ease-in-out infinite;
+		filter: drop-shadow(0 0 15px #ff6b35);
+	}
+
+	.pumpkin-right {
+		right: 2%;
+		top: 20%;
+		animation: bob 3s ease-in-out infinite 1.5s;
+		filter: drop-shadow(0 0 15px #ff6b35);
+	}
+
+	.lamp-left {
+		left: 5%;
+		top: 5%;
+		animation: flicker 2s ease-in-out infinite;
+		filter: drop-shadow(0 0 20px #ffd700);
+	}
+
+	.lamp-right {
+		right: 5%;
+		top: 8%;
+		animation: flicker 2s ease-in-out infinite 1s;
+		filter: drop-shadow(0 0 20px #ffd700);
+	}
+
+	@keyframes bob {
+		0%,
+		100% {
+			transform: translateY(0px) rotate(-2deg);
+		}
+		50% {
+			transform: translateY(-15px) rotate(2deg);
+		}
+	}
+
+	/* Horror Lightning */
+	.lightning {
+		position: fixed;
+		font-size: 4rem;
+		z-index: 998;
+		pointer-events: none;
+		opacity: 0;
+		color: #c77dff;
+		filter: drop-shadow(0 0 20px #9d4edd);
+	}
+
+	.lightning-1 {
+		left: 20%;
+		top: 5%;
+		animation: strike 8s ease-in-out infinite;
+	}
+
+	.lightning-2 {
+		right: 25%;
+		top: 10%;
+		animation: strike 8s ease-in-out infinite 4s;
+	}
+
+	@keyframes strike {
+		0%,
+		90%,
+		100% {
+			opacity: 0;
+		}
+		91% {
+			opacity: 1;
+		}
+		92% {
+			opacity: 0;
+		}
+		93% {
+			opacity: 1;
+		}
+		94%,
+		96% {
+			opacity: 0;
+		}
+		97% {
+			opacity: 1;
+		}
+	}
+
+	/* Add atmospheric glow to body */
+	:global(body)::before {
+		content: '';
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: radial-gradient(
+			circle at 50% 50%,
+			rgba(157, 78, 221, 0.1) 0%,
+			transparent 70%
+		);
+		pointer-events: none;
+		z-index: 1;
 	}
 </style>
