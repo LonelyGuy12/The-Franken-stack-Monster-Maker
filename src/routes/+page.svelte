@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import type { FrankenMonster } from '$lib/types';
 
 	let monster: FrankenMonster | null = null;
 	let loading = false;
 	let error = '';
+	let witchElement: HTMLImageElement;
 
 	async function summonMonster() {
 		loading = true;
@@ -22,11 +24,39 @@
 			loading = false;
 		}
 	}
+
+	function randomizeWitchPath() {
+		if (!witchElement) return;
+
+		const startY = Math.random() * 60 + 10; // 10% to 70%
+		const endY = Math.random() * 60 + 10;
+		const midY1 = Math.random() * 60 + 10;
+		const midY2 = Math.random() * 60 + 10;
+
+		const duration = Math.random() * 5 + 12; // 12-17 seconds
+
+		witchElement.style.setProperty('--start-y', `${startY}%`);
+		witchElement.style.setProperty('--mid-y1', `${midY1}%`);
+		witchElement.style.setProperty('--mid-y2', `${midY2}%`);
+		witchElement.style.setProperty('--end-y', `${endY}%`);
+		witchElement.style.animationDuration = `${duration}s`;
+	}
+
+	onMount(() => {
+		randomizeWitchPath();
+
+		// Randomize path when animation ends
+		witchElement.addEventListener('animationiteration', randomizeWitchPath);
+
+		return () => {
+			witchElement?.removeEventListener('animationiteration', randomizeWitchPath);
+		};
+	});
 </script>
 
 <main>
 	<!-- Flying Witch -->
-	<img src="/witch.png" alt="Flying Witch" class="flying-witch" />
+	<img src="/witch.png" alt="Flying Witch" class="flying-witch" bind:this={witchElement} />
 
 	<!-- Spooky Decorations -->
 	<div class="decoration pumpkin pumpkin-left">🎃</div>
@@ -62,7 +92,18 @@
 				<div class="head-section">
 					<h2 class="section-title">👤 The Head (Identity)</h2>
 					<div class="head-content">
-						<img src={monster.monster_data.head.picture} alt="Monster Head" class="head-image" />
+						<div class="profile-container">
+							<!-- Haunted decorations around profile -->
+							<div class="haunted-element ghost ghost-1">👻</div>
+							<div class="haunted-element ghost ghost-2">👻</div>
+							<div class="haunted-element skull skull-1">💀</div>
+							<div class="haunted-element skull skull-2">💀</div>
+							<div class="haunted-element bat bat-1">🦇</div>
+							<div class="haunted-element bat bat-2">🦇</div>
+							<div class="haunted-element spider">🕷️</div>
+							<div class="haunted-ring"></div>
+							<img src={monster.monster_data.head.picture} alt="Monster Head" class="head-image" />
+						</div>
 						<div class="head-info">
 							<p><strong>Name:</strong> {monster.monster_data.head.name}</p>
 							<p><strong>Gender:</strong> {monster.monster_data.head.gender}</p>
@@ -337,6 +378,15 @@
 		flex-wrap: wrap;
 	}
 
+	.profile-container {
+		position: relative;
+		width: 200px;
+		height: 200px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
 	.head-image {
 		width: 150px;
 		height: 150px;
@@ -345,11 +395,144 @@
 		box-shadow: 0 0 20px #9d4edd, 0 0 40px rgba(157, 78, 221, 0.4);
 		transition: all 0.3s ease;
 		filter: saturate(1.2) contrast(1.1);
+		position: relative;
+		z-index: 2;
 	}
 
 	.head-image:hover {
 		box-shadow: 0 0 30px #c77dff, 0 0 60px rgba(199, 125, 255, 0.5);
 		transform: scale(1.05);
+	}
+
+	/* Haunted ring around profile */
+	.haunted-ring {
+		position: absolute;
+		width: 180px;
+		height: 180px;
+		border: 2px dashed #9d4edd;
+		border-radius: 50%;
+		animation: rotateRing 10s linear infinite;
+		opacity: 0.5;
+		z-index: 1;
+	}
+
+	@keyframes rotateRing {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* Haunted elements */
+	.haunted-element {
+		position: absolute;
+		font-size: 1.5rem;
+		z-index: 3;
+		filter: drop-shadow(0 0 5px #9d4edd);
+		pointer-events: none;
+	}
+
+	.ghost {
+		animation: floatGhost 3s ease-in-out infinite;
+	}
+
+	.ghost-1 {
+		top: -10px;
+		left: 10px;
+		animation-delay: 0s;
+	}
+
+	.ghost-2 {
+		bottom: -10px;
+		right: 10px;
+		animation-delay: 1.5s;
+	}
+
+	@keyframes floatGhost {
+		0%,
+		100% {
+			transform: translateY(0px) translateX(0px);
+			opacity: 0.7;
+		}
+		50% {
+			transform: translateY(-10px) translateX(5px);
+			opacity: 1;
+		}
+	}
+
+	.skull {
+		animation: bobSkull 2s ease-in-out infinite;
+	}
+
+	.skull-1 {
+		top: 10px;
+		right: -5px;
+		animation-delay: 0.5s;
+	}
+
+	.skull-2 {
+		bottom: 10px;
+		left: -5px;
+		animation-delay: 1s;
+	}
+
+	@keyframes bobSkull {
+		0%,
+		100% {
+			transform: rotate(-10deg) translateY(0px);
+		}
+		50% {
+			transform: rotate(10deg) translateY(-8px);
+		}
+	}
+
+	.bat {
+		animation: flyBat 4s ease-in-out infinite;
+		font-size: 1.2rem;
+	}
+
+	.bat-1 {
+		top: 30px;
+		left: -15px;
+		animation-delay: 0s;
+	}
+
+	.bat-2 {
+		bottom: 30px;
+		right: -15px;
+		animation-delay: 2s;
+	}
+
+	@keyframes flyBat {
+		0%,
+		100% {
+			transform: translateX(0px) translateY(0px) rotate(0deg);
+		}
+		25% {
+			transform: translateX(-10px) translateY(-5px) rotate(-15deg);
+		}
+		75% {
+			transform: translateX(10px) translateY(5px) rotate(15deg);
+		}
+	}
+
+	.spider {
+		top: -20px;
+		left: 50%;
+		transform: translateX(-50%);
+		animation: hangSpider 3s ease-in-out infinite;
+	}
+
+	@keyframes hangSpider {
+		0%,
+		100% {
+			transform: translateX(-50%) translateY(0px);
+		}
+		50% {
+			transform: translateX(-50%) translateY(10px);
+		}
 	}
 
 	.head-info {
@@ -478,29 +661,33 @@
 		animation: flyAcross 15s linear infinite;
 		pointer-events: none;
 		transform: scaleX(-1);
+		--start-y: 10%;
+		--mid-y1: 20%;
+		--mid-y2: 15%;
+		--end-y: 25%;
 	}
 
 	@keyframes flyAcross {
 		0% {
 			left: -200px;
-			top: 10%;
+			top: var(--start-y);
 			transform: scaleX(-1) rotate(-5deg);
 		}
 		25% {
-			top: 20%;
+			top: var(--mid-y1);
 			transform: scaleX(-1) rotate(5deg);
 		}
 		50% {
-			top: 15%;
+			top: var(--mid-y2);
 			transform: scaleX(-1) rotate(-3deg);
 		}
 		75% {
-			top: 25%;
+			top: var(--end-y);
 			transform: scaleX(-1) rotate(3deg);
 		}
 		100% {
 			left: calc(100% + 200px);
-			top: 10%;
+			top: var(--end-y);
 			transform: scaleX(-1) rotate(-5deg);
 		}
 	}
