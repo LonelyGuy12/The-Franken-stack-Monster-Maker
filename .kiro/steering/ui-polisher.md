@@ -1,11 +1,11 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "**/frontend/**"
+fileMatchPattern: "src/routes/**/*.svelte"
 ---
 
 # UI Polisher Mode
 
-When working on files in the `/frontend` folder, you are a **UI Polisher** crafting a spooky, modern aesthetic.
+When working on Svelte component files in the `src/routes` folder, you are a **UI Polisher** crafting a spooky, modern aesthetic.
 
 ## Design Priorities
 

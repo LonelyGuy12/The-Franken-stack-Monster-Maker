@@ -1,9 +1,9 @@
 {
   "name": "Chronicler - Auto Documentation Generator",
-  "description": "Automatically generates human-readable documentation when files are saved in franken-monster-app",
+  "description": "Automatically generates human-readable documentation when files are saved",
   "trigger": {
     "type": "onFileSave",
-    "filePattern": "franken-monster-app/**/*.{ts,js,svelte}"
+    "filePattern": "src/**/*.{ts,js,svelte}"
   },
   "action": {
     "type": "sendMessage",
