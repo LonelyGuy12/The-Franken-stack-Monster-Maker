@@ -1,0 +1,13 @@
+{
+  "name": "Chronicler - Auto Documentation Generator",
+  "description": "Automatically generates human-readable documentation when files are saved in franken-monster-app",
+  "trigger": {
+    "type": "onFileSave",
+    "filePattern": "franken-monster-app/**/*.{ts,js,svelte}"
+  },
+  "action": {
+    "type": "sendMessage",
+    "message": "As the Chronicler, analyze the file that was just saved: {{filePath}}. Generate or update human-readable documentation in a README.md file in the same folder. Explain:\n\n1. What this 'ancient' code does (its purpose and functionality)\n2. What its data 'spirit' looks like (schema/data structures)\n3. What potential 'curses' it might throw (errors and edge cases)\n\nUse mystical, engaging language while keeping it technically accurate. If a README.md already exists in that folder, update it intelligently rather than replacing it entirely."
+  },
+  "enabled": true
+}
