@@ -1,39 +1,107 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { FrankenMonster } from '$lib/types';
+	import { monsterCollection } from '$lib/stores/monsterStore';
+	import {
+		calculateRarity,
+		generateBackstory,
+		generatePersonality,
+		generateCurse,
+		generateMonsterName
+	} from '$lib/utils/monsterEnhancer';
+	import ParticleSystem from '$lib/components/ParticleSystem.svelte';
+	import FogEffect from '$lib/components/FogEffect.svelte';
+	import MonsterCard from '$lib/components/MonsterCard.svelte';
 
-	let monster: FrankenMonster | null = null;
+	let monster: any = null;
 	let loading = false;
 	let error = '';
 	let witchElement: HTMLImageElement;
+	let showGallery = false;
+	let retryCount = 0;
+	let customName = '';
+	let showNameInput = false;
+
+	// Sound effects (placeholder - would need actual audio files)
+	function playSound(type: 'summon' | 'thunder' | 'witch') {
+		// Placeholder for sound effects
+		console.log(`Playing ${type} sound`);
+	}
 
 	async function summonMonster() {
 		loading = true;
 		error = '';
 		monster = null;
+		retryCount = 0;
+		showNameInput = false;
+
+		playSound('summon');
 
 		try {
 			const response = await fetch('/api/monster');
 			if (!response.ok) {
 				throw new Error('Failed to summon monster');
 			}
-			monster = await response.json();
+			const baseMonster = await response.json();
+
+			// Enhance monster with metadata
+			const rarity = calculateRarity(baseMonster);
+			const backstory = generateBackstory(baseMonster);
+			const personality = generatePersonality(baseMonster);
+			const curse = generateCurse(baseMonster);
+			const name = generateMonsterName(baseMonster);
+
+			monster = {
+				...baseMonster,
+				name,
+				rarity,
+				backstory,
+				personality,
+				curse
+			};
+
+			// Add to collection
+			monsterCollection.addMonster(monster);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Unknown error occurred';
+			// Auto-retry once
+			if (retryCount < 1) {
+				retryCount++;
+				setTimeout(() => summonMonster(), 2000);
+			}
 		} finally {
 			loading = false;
 		}
 	}
 
+	function saveMonsterName() {
+		if (customName.trim() && monster) {
+			monster.name = customName.trim();
+			monsterCollection.addMonster(monster);
+			showNameInput = false;
+			customName = '';
+		}
+	}
+
+	function downloadMonsterCard() {
+		// Placeholder for download functionality
+		alert('Monster card download feature coming soon!');
+	}
+
+	function shareMonster() {
+		const url = `${window.location.origin}?monster=${monster.monster_id}`;
+		navigator.clipboard.writeText(url);
+		alert('Monster link copied to clipboard!');
+	}
+
 	function randomizeWitchPath() {
 		if (!witchElement) return;
 
-		const startY = Math.random() * 60 + 10; // 10% to 70%
+		const startY = Math.random() * 60 + 10;
 		const endY = Math.random() * 60 + 10;
 		const midY1 = Math.random() * 60 + 10;
 		const midY2 = Math.random() * 60 + 10;
-
-		const duration = Math.random() * 5 + 12; // 12-17 seconds
+		const duration = Math.random() * 5 + 12;
 
 		witchElement.style.setProperty('--start-y', `${startY}%`);
 		witchElement.style.setProperty('--mid-y1', `${midY1}%`);
@@ -42,25 +110,83 @@
 		witchElement.style.animationDuration = `${duration}s`;
 	}
 
+	function handleWitchClick() {
+		playSound('witch');
+		// Make witch spin
+		if (witchElement) {
+			witchElement.style.animation = 'none';
+			setTimeout(() => {
+				witchElement.style.animation = '';
+				randomizeWitchPath();
+			}, 10);
+		}
+	}
+
+	function handlePumpkinClick(side: 'left' | 'right') {
+		// Pumpkin explosion effect
+		const pumpkin = document.querySelector(`.pumpkin-${side}`);
+		if (pumpkin) {
+			pumpkin.classList.add('explode');
+			setTimeout(() => pumpkin.classList.remove('explode'), 1000);
+		}
+	}
+
+	function triggerLightning() {
+		playSound('thunder');
+		document.body.style.background = '#fff';
+		setTimeout(() => {
+			document.body.style.background = '';
+		}, 100);
+	}
+
 	onMount(() => {
 		randomizeWitchPath();
-
-		// Randomize path when animation ends
 		witchElement.addEventListener('animationiteration', randomizeWitchPath);
+
+		// Random lightning strikes
+		const lightningInterval = setInterval(() => {
+			if (Math.random() < 0.1) triggerLightning();
+		}, 10000);
 
 		return () => {
 			witchElement?.removeEventListener('animationiteration', randomizeWitchPath);
+			clearInterval(lightningInterval);
 		};
 	});
 </script>
 
+<ParticleSystem />
+<FogEffect />
+
 <main>
 	<!-- Flying Witch -->
-	<img src="/witch.png" alt="Flying Witch" class="flying-witch" bind:this={witchElement} />
+	<img
+		src="/witch.png"
+		alt="Flying Witch"
+		class="flying-witch"
+		bind:this={witchElement}
+		on:click={handleWitchClick}
+		role="button"
+		tabindex="0"
+	/>
 
 	<!-- Spooky Decorations -->
-	<div class="decoration pumpkin pumpkin-left">🎃</div>
-	<div class="decoration pumpkin pumpkin-right">🎃</div>
+	<div
+		class="decoration pumpkin pumpkin-left"
+		on:click={() => handlePumpkinClick('left')}
+		role="button"
+		tabindex="0"
+	>
+		🎃
+	</div>
+	<div
+		class="decoration pumpkin pumpkin-right"
+		on:click={() => handlePumpkinClick('right')}
+		role="button"
+		tabindex="0"
+	>
+		🎃
+	</div>
 	<div class="decoration lamp lamp-left">🕯️</div>
 	<div class="decoration lamp lamp-right">🕯️</div>
 	<div class="lightning lightning-1">⚡</div>
@@ -69,9 +195,14 @@
 	<div class="container">
 		<h1 class="title">🧟‍♂️ Franken-Monster Lab 🧟‍♂️</h1>
 
-		<button class="summon-btn" on:click={summonMonster} disabled={loading}>
-			{loading ? 'Summoning...' : '⚡ Summon Monster ⚡'}
-		</button>
+		<div class="controls">
+			<button class="summon-btn" on:click={summonMonster} disabled={loading}>
+				{loading ? 'Summoning...' : '⚡ Summon Monster ⚡'}
+			</button>
+			<button class="gallery-btn" on:click={() => (showGallery = !showGallery)}>
+				{showGallery ? '🧪 Lab' : '⚰️ Cemetery'}
+			</button>
+		</div>
 
 		{#if loading}
 			<div class="loading">
@@ -83,11 +214,96 @@
 		{#if error}
 			<div class="error">
 				<p>💀 Error: {error}</p>
+				{#if retryCount > 0}
+					<p class="retry-msg">Attempting resurrection... {retryCount}/1</p>
+				{/if}
 			</div>
 		{/if}
 
-		{#if monster && !loading}
+		{#if showGallery}
+			<div class="gallery-section">
+				<h2 class="gallery-title">👻 Monster Cemetery 👻</h2>
+				<p class="gallery-subtitle">Your collection of unholy creations</p>
+
+				{#if $monsterCollection.length === 0}
+					<div class="empty-gallery">
+						<p>No monsters summoned yet...</p>
+						<p class="hint">Click "Summon Monster" to begin your collection!</p>
+					</div>
+				{:else}
+					<div class="gallery-grid">
+						{#each $monsterCollection as collectedMonster (collectedMonster.monster_id)}
+							<MonsterCard monster={collectedMonster} compact={false} />
+						{/each}
+					</div>
+					<button class="clear-btn" on:click={() => monsterCollection.clear()}>
+						🔥 Clear Cemetery
+					</button>
+				{/if}
+			</div>
+		{/if}
+
+		{#if monster && !loading && !showGallery}
 			<div class="monster-container">
+				<!-- Monster Header with Rarity -->
+				<div class="monster-header">
+					<div class="name-section">
+						{#if showNameInput}
+							<input
+								type="text"
+								bind:value={customName}
+								placeholder="Enter monster name..."
+								class="name-input"
+								on:keydown={(e) => e.key === 'Enter' && saveMonsterName()}
+							/>
+							<button class="save-name-btn" on:click={saveMonsterName}>✓</button>
+							<button class="cancel-name-btn" on:click={() => (showNameInput = false)}>✗</button>
+						{:else}
+							<h2 class="monster-title">{monster.name}</h2>
+							<button class="rename-btn" on:click={() => (showNameInput = true)}>✏️</button>
+						{/if}
+					</div>
+					<div class="rarity-display {monster.rarity}">
+						<span class="rarity-text">{monster.rarity?.toUpperCase()}</span>
+						<div class="rarity-glow"></div>
+					</div>
+				</div>
+
+				<!-- Backstory Section -->
+				{#if monster.backstory}
+					<div class="backstory-section">
+						<h3 class="backstory-title">📜 Origin Story</h3>
+						<p class="backstory-text">{monster.backstory}</p>
+					</div>
+				{/if}
+
+				<!-- Personality Traits -->
+				{#if monster.personality && monster.personality.length > 0}
+					<div class="personality-section">
+						<h3 class="personality-title">🎭 Personality</h3>
+						<div class="traits-container">
+							{#each monster.personality as trait}
+								<span class="trait-badge">{trait}</span>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				<!-- Curse Warning -->
+				{#if monster.curse}
+					<div class="curse-section">
+						<h3 class="curse-title">⚠️ Cursed!</h3>
+						<p class="curse-text">{monster.curse}</p>
+					</div>
+				{/if}
+
+				<!-- Action Buttons -->
+				<div class="action-buttons">
+					<button class="action-btn" on:click={downloadMonsterCard}>📸 Download</button>
+					<button class="action-btn" on:click={shareMonster}>🔗 Share</button>
+					<button class="action-btn" on:click={summonMonster}>🔄 New Monster</button>
+				</div>
+
 				<!-- The Head (Identity) -->
 				<div class="head-section">
 					<h2 class="section-title">👤 The Head (Identity)</h2>
@@ -214,9 +430,16 @@
 		}
 	}
 
-	.summon-btn {
-		display: block;
-		margin: 0 auto 2rem;
+	.controls {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		margin-bottom: 2rem;
+		flex-wrap: wrap;
+	}
+
+	.summon-btn,
+	.gallery-btn {
 		padding: 1rem 2rem;
 		font-size: 1.2rem;
 		font-weight: bold;
@@ -230,7 +453,8 @@
 		box-shadow: 0 0 15px rgba(157, 78, 221, 0.3);
 	}
 
-	.summon-btn:hover:not(:disabled) {
+	.summon-btn:hover:not(:disabled),
+	.gallery-btn:hover {
 		background: linear-gradient(135deg, #9d4edd 0%, #c77dff 100%);
 		color: #10002b;
 		box-shadow: 0 0 30px #9d4edd, 0 0 50px rgba(157, 78, 221, 0.5);
@@ -240,6 +464,267 @@
 	.summon-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.monster-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 2rem;
+		padding: 1.5rem;
+		background: linear-gradient(135deg, rgba(60, 9, 108, 0.4) 0%, rgba(36, 0, 70, 0.6) 100%);
+		border: 2px solid #9d4edd;
+		border-radius: 10px;
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+
+	.name-section {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex: 1;
+	}
+
+	.monster-title {
+		font-size: 2rem;
+		color: #e0aaff;
+		margin: 0;
+		text-shadow: 0 0 10px #9d4edd;
+	}
+
+	.name-input {
+		flex: 1;
+		padding: 0.5rem;
+		background: rgba(16, 0, 43, 0.8);
+		border: 2px solid #9d4edd;
+		color: #e0aaff;
+		font-family: 'Courier New', monospace;
+		font-size: 1.2rem;
+	}
+
+	.rename-btn,
+	.save-name-btn,
+	.cancel-name-btn {
+		padding: 0.5rem;
+		background: rgba(157, 78, 221, 0.3);
+		border: 2px solid #9d4edd;
+		color: #e0aaff;
+		cursor: pointer;
+		transition: all 0.3s ease;
+	}
+
+	.rename-btn:hover,
+	.save-name-btn:hover,
+	.cancel-name-btn:hover {
+		background: #9d4edd;
+		transform: scale(1.1);
+	}
+
+	.rarity-display {
+		position: relative;
+		padding: 0.5rem 1rem;
+		border-radius: 5px;
+		font-weight: bold;
+		text-align: center;
+	}
+
+	.rarity-display.common {
+		background: #808080;
+		color: #000;
+	}
+	.rarity-display.rare {
+		background: #4169e1;
+		color: #fff;
+	}
+	.rarity-display.epic {
+		background: #9d4edd;
+		color: #fff;
+	}
+	.rarity-display.legendary {
+		background: #ffd700;
+		color: #000;
+		animation: legendary-pulse 2s ease-in-out infinite;
+	}
+	.rarity-display.cursed {
+		background: #ff006e;
+		color: #fff;
+		animation: cursed-shake 0.5s ease-in-out infinite;
+	}
+
+	@keyframes legendary-pulse {
+		0%,
+		100% {
+			box-shadow: 0 0 20px #ffd700;
+		}
+		50% {
+			box-shadow: 0 0 40px #ffd700;
+		}
+	}
+
+	@keyframes cursed-shake {
+		0%,
+		100% {
+			transform: translateX(0);
+		}
+		25% {
+			transform: translateX(-2px);
+		}
+		75% {
+			transform: translateX(2px);
+		}
+	}
+
+	.backstory-section,
+	.personality-section,
+	.curse-section {
+		margin-bottom: 1.5rem;
+		padding: 1rem;
+		background: linear-gradient(135deg, rgba(36, 0, 70, 0.4) 0%, rgba(16, 0, 43, 0.6) 100%);
+		border: 2px solid #9d4edd;
+		border-radius: 10px;
+	}
+
+	.backstory-title,
+	.personality-title,
+	.curse-title {
+		font-size: 1.3rem;
+		color: #e0aaff;
+		margin-bottom: 0.5rem;
+		text-shadow: 0 0 5px #9d4edd;
+	}
+
+	.backstory-text {
+		line-height: 1.6;
+		font-style: italic;
+		color: #c77dff;
+	}
+
+	.traits-container {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.trait-badge {
+		padding: 0.5rem 1rem;
+		background: rgba(157, 78, 221, 0.3);
+		border: 2px solid #9d4edd;
+		border-radius: 20px;
+		color: #e0aaff;
+		font-size: 0.9rem;
+		transition: all 0.3s ease;
+	}
+
+	.trait-badge:hover {
+		background: rgba(157, 78, 221, 0.6);
+		transform: scale(1.05);
+	}
+
+	.curse-section {
+		border-color: #ff006e;
+		background: linear-gradient(135deg, rgba(51, 0, 17, 0.6) 0%, rgba(26, 0, 8, 0.8) 100%);
+	}
+
+	.curse-title {
+		color: #ff006e;
+	}
+
+	.curse-text {
+		color: #ff006e;
+		font-style: italic;
+		animation: ghostly 3s ease-in-out infinite;
+	}
+
+	.action-buttons {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		margin-bottom: 2rem;
+		flex-wrap: wrap;
+	}
+
+	.action-btn {
+		padding: 0.75rem 1.5rem;
+		background: linear-gradient(135deg, #240046 0%, #3c096c 100%);
+		border: 2px solid #9d4edd;
+		color: #e0aaff;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		font-family: 'Courier New', monospace;
+		font-size: 1rem;
+		border-radius: 5px;
+	}
+
+	.action-btn:hover {
+		background: linear-gradient(135deg, #9d4edd 0%, #c77dff 100%);
+		transform: translateY(-2px);
+		box-shadow: 0 5px 15px rgba(157, 78, 221, 0.4);
+	}
+
+	.gallery-section {
+		margin-top: 2rem;
+	}
+
+	.gallery-title {
+		text-align: center;
+		font-size: 2rem;
+		color: #e0aaff;
+		text-shadow: 0 0 10px #9d4edd;
+		margin-bottom: 0.5rem;
+	}
+
+	.gallery-subtitle {
+		text-align: center;
+		color: #c77dff;
+		margin-bottom: 2rem;
+		font-style: italic;
+	}
+
+	.empty-gallery {
+		text-align: center;
+		padding: 3rem;
+		background: linear-gradient(135deg, rgba(36, 0, 70, 0.4) 0%, rgba(16, 0, 43, 0.6) 100%);
+		border: 2px dashed #9d4edd;
+		border-radius: 10px;
+	}
+
+	.hint {
+		color: #9d4edd;
+		font-size: 0.9rem;
+		margin-top: 1rem;
+	}
+
+	.gallery-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1.5rem;
+		margin-bottom: 2rem;
+	}
+
+	.clear-btn {
+		display: block;
+		margin: 0 auto;
+		padding: 0.75rem 1.5rem;
+		background: linear-gradient(135deg, #330011 0%, #1a0008 100%);
+		border: 2px solid #ff006e;
+		color: #ff006e;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		font-family: 'Courier New', monospace;
+		border-radius: 5px;
+	}
+
+	.clear-btn:hover {
+		background: #ff006e;
+		color: #000;
+		transform: scale(1.05);
+	}
+
+	.retry-msg {
+		font-size: 0.9rem;
+		margin-top: 0.5rem;
+		animation: pulse 1s infinite;
 	}
 
 	.loading {
@@ -659,12 +1144,18 @@
 		z-index: 1000;
 		filter: drop-shadow(0 0 15px #9d4edd);
 		animation: flyAcross 15s linear infinite;
-		pointer-events: none;
+		cursor: pointer;
+		pointer-events: auto;
 		transform: scaleX(-1);
+		transition: filter 0.3s ease;
 		--start-y: 10%;
 		--mid-y1: 20%;
 		--mid-y2: 15%;
 		--end-y: 25%;
+	}
+
+	.flying-witch:hover {
+		filter: drop-shadow(0 0 30px #c77dff);
 	}
 
 	@keyframes flyAcross {
@@ -697,7 +1188,32 @@
 		position: fixed;
 		font-size: 3rem;
 		z-index: 999;
-		pointer-events: none;
+		cursor: pointer;
+		pointer-events: auto;
+		transition: all 0.3s ease;
+	}
+
+	.decoration:hover {
+		transform: scale(1.2);
+	}
+
+	.pumpkin.explode {
+		animation: explode 0.5s ease-out;
+	}
+
+	@keyframes explode {
+		0% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		50% {
+			transform: scale(2) rotate(180deg);
+			opacity: 0.5;
+		}
+		100% {
+			transform: scale(0.8) rotate(360deg);
+			opacity: 1;
+		}
 	}
 
 	.pumpkin-left {

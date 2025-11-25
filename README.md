@@ -73,6 +73,46 @@ curl http://localhost:5173/api/monster
 1. **Parallel Fetching**: The head and torso are fetched simultaneously from external APIs
 2. **Local Reading**: The legs are read from a local JSON file
 3. **Assembly**: All three parts are combined into a single monster_data object
-4. **Response**: Returns the assembled monster with metadata
+4. **Enhancement**: Adds rarity, backstory, personality traits, and potential curses
+5. **Storage**: Saves to your local monster collection
 
 Each request creates a unique monster - refresh to see different combinations!
+
+## ✨ Features
+
+### Visual Enhancements
+- 🌫️ **Fog Effect** - Atmospheric purple mist drifting across the screen
+- ✨ **Particle System** - 30 floating purple sparkles
+- 🧙‍♀️ **Flying Witch** - Randomized flight paths, clickable for surprises
+- 🎃 **Interactive Pumpkins** - Click to trigger explosion animations
+- ⚡ **Random Lightning** - Periodic thunder strikes
+- 👻 **Haunted Profile** - Floating ghosts, skulls, bats, and spiders around avatars
+
+### Functionality
+- 🎲 **Rarity System** - Common, Rare, Epic, Legendary, and Cursed monsters
+- 📜 **Backstory Generator** - Unique origin stories for each monster
+- 🎭 **Personality Traits** - Dynamic traits based on stats
+- ⚠️ **Curse System** - 15% chance of special curses
+- 🏷️ **Custom Naming** - Rename your monsters
+- 💾 **Monster Collection** - Stores last 50 monsters in localStorage
+- ⚰️ **Cemetery Gallery** - View all your summoned monsters
+- 🔄 **Auto-Retry** - Automatically retries failed API calls
+- 📸 **Download Cards** - Save monster cards (coming soon)
+- 🔗 **Share Monsters** - Generate shareable links
+
+### Interactive Elements
+- All decorations are clickable
+- Witch changes direction when clicked
+- Pumpkins explode on click
+- Hover effects on all interactive elements
+- Smooth transitions and animations throughout
+
+## 🎨 Spooky Theme
+
+The entire interface features a haunting purple aesthetic with:
+- Deep purple gradients (#0a0015 to #1a0033)
+- Glowing text effects
+- Jagged, stitched borders
+- Floating animations
+- Eerie transitions
+- Gothic typography
