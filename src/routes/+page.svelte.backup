@@ -12,14 +12,6 @@
 	import ParticleSystem from '$lib/components/ParticleSystem.svelte';
 	import FogEffect from '$lib/components/FogEffect.svelte';
 	import MonsterCard from '$lib/components/MonsterCard.svelte';
-	import StitchingAnimation from '$lib/components/StitchingAnimation.svelte';
-	import AchievementToast from '$lib/components/AchievementToast.svelte';
-	import LoadingSkeleton from '$lib/components/LoadingSkeleton.svelte';
-	import BattleMode from '$lib/components/BattleMode.svelte';
-	import Cobwebs from '$lib/components/Cobwebs.svelte';
-	import BloodDrips from '$lib/components/BloodDrips.svelte';
-	import { soundManager } from '$lib/utils/soundManager';
-	import { achievementManager } from '$lib/utils/achievements';
 
 	let monster: any = null;
 	let loading = false;
@@ -29,21 +21,21 @@
 	let retryCount = 0;
 	let customName = '';
 	let showNameInput = false;
-	let showStitching = false;
-	let unlockedAchievement: any = null;
-	let showBattle = false;
-	let battleMonsters: any[] = [];
-	let showAchievements = false;
+
+	// Sound effects (placeholder - would need actual audio files)
+	function playSound(type: 'summon' | 'thunder' | 'witch') {
+		// Placeholder for sound effects
+		console.log(`Playing ${type} sound`);
+	}
 
 	async function summonMonster() {
 		loading = true;
-		showStitching = true;
 		error = '';
 		monster = null;
 		retryCount = 0;
 		showNameInput = false;
 
-		soundManager.play('summon');
+		playSound('summon');
 
 		try {
 			const response = await fetch('/api/monster');
@@ -70,42 +62,8 @@
 
 			// Add to collection
 			monsterCollection.addMonster(monster);
-
-			// Check achievements
-			const collectionSize = $monsterCollection.length;
-			let newAchievement = null;
-
-			if (collectionSize === 1) {
-				newAchievement = achievementManager.checkAchievement('first_summon');
-			} else if (collectionSize === 10) {
-				newAchievement = achievementManager.checkAchievement('collector');
-			} else if (collectionSize === 50) {
-				newAchievement = achievementManager.checkAchievement('hoarder');
-				achievementManager.checkAchievement('full_collection');
-			}
-
-			if (rarity === 'legendary') {
-				newAchievement = achievementManager.checkAchievement('legendary_hunter');
-			}
-			if (curse) {
-				newAchievement = achievementManager.checkAchievement('cursed_one');
-			}
-			if (baseMonster.monster_data.torso.total_power >= 600) {
-				newAchievement = achievementManager.checkAchievement('power_seeker');
-			}
-
-			const hour = new Date().getHours();
-			if (hour === 0) {
-				newAchievement = achievementManager.checkAchievement('midnight_summoner');
-			}
-
-			if (newAchievement) {
-				unlockedAchievement = newAchievement;
-				soundManager.play('success');
-			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Unknown error occurred';
-			soundManager.play('error');
 			// Auto-retry once
 			if (retryCount < 1) {
 				retryCount++;
@@ -113,7 +71,6 @@
 			}
 		} finally {
 			loading = false;
-			showStitching = false;
 		}
 	}
 
@@ -154,7 +111,7 @@
 	}
 
 	function handleWitchClick() {
-		soundManager.play('witch');
+		playSound('witch');
 		// Make witch spin
 		if (witchElement) {
 			witchElement.style.animation = 'none';
@@ -162,14 +119,6 @@
 				witchElement.style.animation = '';
 				randomizeWitchPath();
 			}, 10);
-		}
-	}
-
-	function startBattle() {
-		if ($monsterCollection.length >= 2) {
-			battleMonsters = [$monsterCollection[0], $monsterCollection[1]];
-			showBattle = true;
-			soundManager.play('summon');
 		}
 	}
 
@@ -183,7 +132,7 @@
 	}
 
 	function triggerLightning() {
-		soundManager.play('thunder');
+		playSound('thunder');
 		document.body.style.background = '#fff';
 		setTimeout(() => {
 			document.body.style.background = '';
@@ -208,24 +157,6 @@
 
 <ParticleSystem />
 <FogEffect />
-<Cobwebs />
-<BloodDrips />
-<StitchingAnimation show={showStitching} />
-
-{#if unlockedAchievement}
-	<AchievementToast
-		achievement={unlockedAchievement}
-		onClose={() => (unlockedAchievement = null)}
-	/>
-{/if}
-
-{#if showBattle}
-	<BattleMode
-		monster1={battleMonsters[0]}
-		monster2={battleMonsters[1]}
-		onClose={() => (showBattle = false)}
-	/>
-{/if}
 
 <main>
 	<!-- Flying Witch -->
@@ -268,17 +199,13 @@
 			<button class="gallery-btn" on:click={() => (showGallery = !showGallery)}>
 				{showGallery ? '🧪 Lab' : '⚰️ Cemetery'}
 			</button>
-			{#if $monsterCollection.length >= 2}
-				<button class="battle-btn" on:click={startBattle}>⚔️ Battle</button>
-			{/if}
-			<button class="achievements-btn" on:click={() => (showAchievements = !showAchievements)}>
-				🏆 Achievements ({achievementManager.getUnlockedCount()}/{achievementManager
-					.getAchievements().length})
-			</button>
 		</div>
 
-		{#if loading && !showStitching}
-			<LoadingSkeleton />
+		{#if loading}
+			<div class="loading">
+				<p class="stitching">Stitching body parts...</p>
+				<div class="lightning">⚡⚡⚡</div>
+			</div>
 		{/if}
 
 		{#if error}
@@ -287,35 +214,6 @@
 				{#if retryCount > 0}
 					<p class="retry-msg">Attempting resurrection... {retryCount}/1</p>
 				{/if}
-			</div>
-		{/if}
-
-		{#if showAchievements}
-			<div class="achievements-section">
-				<h2 class="achievements-title">🏆 Achievements 🏆</h2>
-				<div class="achievements-grid">
-					{#each achievementManager.getAchievements() as achievement}
-						<div class="achievement-card {achievement.unlocked ? 'unlocked' : 'locked'}">
-							<div class="achievement-icon">{achievement.icon}</div>
-							<h3>{achievement.name}</h3>
-							<p>{achievement.description}</p>
-							{#if !achievement.unlocked && achievement.maxProgress > 1}
-								<div class="progress-bar">
-									<div
-										class="progress-fill"
-										style="width: {(achievement.progress / achievement.maxProgress) * 100}%"
-									></div>
-								</div>
-								<p class="progress-text">
-									{achievement.progress}/{achievement.maxProgress}
-								</p>
-							{/if}
-							{#if achievement.unlocked}
-								<div class="unlocked-badge">✓ UNLOCKED</div>
-							{/if}
-						</div>
-					{/each}
-				</div>
 			</div>
 		{/if}
 
@@ -538,9 +436,7 @@
 	}
 
 	.summon-btn,
-	.gallery-btn,
-	.battle-btn,
-	.achievements-btn {
+	.gallery-btn {
 		padding: 1rem 2rem;
 		font-size: 1.2rem;
 		font-weight: bold;
@@ -555,9 +451,7 @@
 	}
 
 	.summon-btn:hover:not(:disabled),
-	.gallery-btn:hover,
-	.battle-btn:hover,
-	.achievements-btn:hover {
+	.gallery-btn:hover {
 		background: linear-gradient(135deg, #9d4edd 0%, #c77dff 100%);
 		color: #10002b;
 		box-shadow: 0 0 30px #9d4edd, 0 0 50px rgba(157, 78, 221, 0.5);
@@ -828,99 +722,6 @@
 		font-size: 0.9rem;
 		margin-top: 0.5rem;
 		animation: pulse 1s infinite;
-	}
-
-	/* Achievements Section */
-	.achievements-section {
-		margin-top: 2rem;
-	}
-
-	.achievements-title {
-		text-align: center;
-		font-size: 2rem;
-		color: #e0aaff;
-		text-shadow: 0 0 10px #9d4edd;
-		margin-bottom: 2rem;
-	}
-
-	.achievements-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-		gap: 1.5rem;
-		margin-bottom: 2rem;
-	}
-
-	.achievement-card {
-		background: linear-gradient(135deg, rgba(36, 0, 70, 0.6) 0%, rgba(16, 0, 43, 0.8) 100%);
-		border: 3px solid #9d4edd;
-		border-radius: 10px;
-		padding: 1.5rem;
-		text-align: center;
-		transition: all 0.3s ease;
-		position: relative;
-	}
-
-	.achievement-card.locked {
-		opacity: 0.5;
-		filter: grayscale(0.8);
-	}
-
-	.achievement-card.unlocked {
-		border-color: #ffd700;
-		box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-	}
-
-	.achievement-card:hover {
-		transform: translateY(-5px);
-	}
-
-	.achievement-icon {
-		font-size: 3rem;
-		margin-bottom: 1rem;
-	}
-
-	.achievement-card h3 {
-		color: #e0aaff;
-		margin-bottom: 0.5rem;
-		font-size: 1.1rem;
-	}
-
-	.achievement-card p {
-		color: #c77dff;
-		font-size: 0.9rem;
-		margin-bottom: 1rem;
-	}
-
-	.progress-bar {
-		width: 100%;
-		height: 8px;
-		background: rgba(157, 78, 221, 0.3);
-		border-radius: 4px;
-		overflow: hidden;
-		margin-bottom: 0.5rem;
-	}
-
-	.progress-fill {
-		height: 100%;
-		background: linear-gradient(90deg, #9d4edd 0%, #c77dff 100%);
-		transition: width 0.3s ease;
-	}
-
-	.progress-text {
-		font-size: 0.8rem;
-		color: #9d4edd;
-	}
-
-	.unlocked-badge {
-		position: absolute;
-		top: 10px;
-		right: 10px;
-		background: #ffd700;
-		color: #000;
-		padding: 0.25rem 0.5rem;
-		border-radius: 5px;
-		font-size: 0.7rem;
-		font-weight: bold;
 	}
 
 	.loading {
