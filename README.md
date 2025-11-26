@@ -128,3 +128,15 @@ The entire interface features a haunting purple aesthetic with:
 - Floating animations
 - Eerie transitions
 - Gothic typography
+
+
+
+## 🧠 How I Built This with Kiro (AI Workflow)
+
+This project was built using **Kiro's Agentic Features** to embrace the Frankenstein theme:
+
+* **Spec-Driven Development:** I used Kiro to generate the "Franken-stack" architecture, forcing it to stitch together incompatible APIs (SOAP, REST, and local files) into a single SvelteKit backend.
+* **Vibe Coding (Steering):** I used a `.kiro/steering.md` file to give the AI different personalities.
+    * *Backend:* "Digital Archaeologist" (explains legacy code).
+    * *Frontend:* "Spooky UI Polisher" (ensures the "hacker green" and "cursed purple" aesthetic).
+* **Agent Hooks:** I set up an automated hook that triggers on file save to generate documentation, acting as my "Lab Assistant."
