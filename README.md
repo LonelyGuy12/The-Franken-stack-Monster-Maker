@@ -14,7 +14,6 @@ Each monster is assembled from three distinct parts:
 
 1. Install dependencies:
 ```bash
-cd franken-monster-app
 npm install
 ```
 
@@ -26,6 +25,19 @@ npm run dev
 3. Test the API:
 ```bash
 curl http://localhost:5173/api/monster
+```
+
+## Deploy to Vercel
+
+1. Push your code to GitHub
+2. Import your repository in Vercel
+3. Vercel will automatically detect SvelteKit and deploy
+4. Your Franken-Monster Lab will be live!
+
+Or use the Vercel CLI:
+```bash
+npm install -g vercel
+vercel
 ```
 
 ## API Response Structure

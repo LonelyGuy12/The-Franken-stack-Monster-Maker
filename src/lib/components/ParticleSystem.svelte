@@ -25,7 +25,7 @@
 				animation-delay: {particle.delay}s;
 				animation-duration: {particle.duration}s;
 			"
-		/>
+		></div>
 	{/each}
 </div>
 

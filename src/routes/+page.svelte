@@ -160,33 +160,30 @@
 
 <main>
 	<!-- Flying Witch -->
-	<img
-		src="/witch.png"
-		alt="Flying Witch"
+	<button
 		class="flying-witch"
-		bind:this={witchElement}
 		on:click={handleWitchClick}
-		role="button"
-		tabindex="0"
-	/>
+		aria-label="Click the flying witch"
+		bind:this={witchElement}
+	>
+		<img src="/witch.png" alt="Flying Witch" class="witch-image" />
+	</button>
 
 	<!-- Spooky Decorations -->
-	<div
+	<button
 		class="decoration pumpkin pumpkin-left"
 		on:click={() => handlePumpkinClick('left')}
-		role="button"
-		tabindex="0"
+		aria-label="Click the pumpkin"
 	>
 		🎃
-	</div>
-	<div
+	</button>
+	<button
 		class="decoration pumpkin pumpkin-right"
 		on:click={() => handlePumpkinClick('right')}
-		role="button"
-		tabindex="0"
+		aria-label="Click the pumpkin"
 	>
 		🎃
-	</div>
+	</button>
 	<div class="decoration lamp lamp-left">🕯️</div>
 	<div class="decoration lamp lamp-right">🕯️</div>
 	<div class="lightning lightning-1">⚡</div>
@@ -1148,6 +1145,9 @@
 		pointer-events: auto;
 		transform: scaleX(-1);
 		transition: filter 0.3s ease;
+		background: transparent;
+		border: none;
+		padding: 0;
 		--start-y: 10%;
 		--mid-y1: 20%;
 		--mid-y2: 15%;
@@ -1156,6 +1156,12 @@
 
 	.flying-witch:hover {
 		filter: drop-shadow(0 0 30px #c77dff);
+	}
+
+	.witch-image {
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
 	}
 
 	@keyframes flyAcross {
@@ -1191,6 +1197,9 @@
 		cursor: pointer;
 		pointer-events: auto;
 		transition: all 0.3s ease;
+		background: transparent;
+		border: none;
+		padding: 0;
 	}
 
 	.decoration:hover {
