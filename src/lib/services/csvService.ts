@@ -1,14 +1,8 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import type { LegsData } from '../types';
+import factsData from '$lib/data/facts.json';
 
 export function fetchLegsData(): LegsData {
   try {
-    // Read the local facts.json file
-    const factsPath = join(process.cwd(), 'src', 'lib', 'data', 'facts.json');
-    const factsFile = readFileSync(factsPath, 'utf-8');
-    const factsData = JSON.parse(factsFile);
-    
     // Select a random spooky fact
     const facts = factsData.spookyFacts;
     const randomIndex = Math.floor(Math.random() * facts.length);
